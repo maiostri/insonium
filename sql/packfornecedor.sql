@@ -19,3 +19,18 @@ BEGIN
         return yes;
 END;'
 LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION excluirFornecedor (
+	v_codigo fornecedor.codigo%TYPE)
+RETURNS BOOLEAN AS '
+DECLARE
+BEGIN
+	SELECT fornecedor FROM compra WHERE fornecedor = v_codigo;
+	IF FOUND THEN
+		RAISE EXCEPTION ''Fornecedor % possui compras. Remove-lo iria causar inconsistencias no banco. '', v_fornecedor;
+	ELSE
+		DELETE FROM fornecedor WHERE codigo = v_codigo;
+		COMMIT;
+	END IF;
+END; '
+LANGUAGE 'plpgsql';

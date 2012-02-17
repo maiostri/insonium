@@ -57,3 +57,19 @@ BEGIN
 	END IF;
 END;'
 LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION excluirVenda(
+	v_venda IN venda.codigo%TYPE)
+RETURNS boolean AS '
+BEGIN
+	DELETE FROM vendaproduto WHERE venda = v_venda;
+	DELETE FROM venda where codigo = v_venda;
+	COMMIT;
+	EXCEPTION         
+          WHEN OTHERS THEN
+            BEGIN
+              ROLLBACK;
+              RAISE;
+            END; 
+END; '
+LANGUAGE plpgsql;
