@@ -1,75 +1,106 @@
-CREATE OR REPLACE FUNCTION inserirVenda()
-RETURNS boolean AS '
-DECLARE
-	v_chave integer;	
+CREATE FUNCTION valida_venda() RETURNS TRIGGER AS $valida_venda$
 BEGIN
-	v_chave = nextval(''seqvenda'');
-	INSERT INTO venda (codigo, total, data) values (v_chave, 0, current_timestamp);
-	COMMIT;
-	
-	EXCEPTION         
-          WHEN OTHERS THEN
-            BEGIN
-              ROLLBACK;
-              RAISE;
-            END; 
-        return yes;
-END; '
+	IF NEW.TOTAL < 0 THEN 
+		RAISE EXCEPTION 'Valor invalido';
+	END IF;
+	IF NEW.SENHA < 0 THEN 
+		RAISE EXCEPTION 'Senha invalida';
+	END IF;
+
+	RETURN NEW;
+END;
+$valida_venda$
 LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION inserirProdutoVenda(
-	v_venda 	IN		venda.codigo%TYPE,
-	v_produto	IN		produto.codigo%TYPE,
-	v_quantidade	IN		produto.quantidade%TYPE)
-RETURNS boolean AS '
+CREATE TRIGGER validacao_venda BEFORE INSERT OR UPDATE ON venda
+FOR EACH ROW EXECUTE PROCEDURE valida_venda();
+
+CREATE OR REPLACE FUNCTION valida_excluir_venda()
+  RETURNS trigger AS
+$BODY$
+DECLARE
+	reg vendaproduto%ROWTYPE;
+BEGIN
+	/* revertendo estoque da venda a ser removida */
+	FOR reg in 
+		SELECT venda, produto, quantidade FROM vendaproduto WHERE venda = OLD.CODIGO
+	LOOP
+		UPDATE produto SET quantidade = quantidade + reg.quantidade WHERE codigo = reg.produto;
+	END LOOP;
+
+	DELETE FROM vendaproduto WHERE venda = OLD.CODIGO;
+
+	RETURN NEW;
+END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+
+CREATE TRIGGER validacao_excluir_venda BEFORE DELETE ON venda
+FOR EACH ROW EXECUTE PROCEDURE valida_excluir_venda();
+
+CREATE OR REPLACE FUNCTION valida_venda_produto() RETURNS TRIGGER AS $valida_venda_produto$
 DECLARE
 	rs RECORD;
 BEGIN
-	/* Buscar o produto */
-	SELECT INTO rs codigo, quantidade FROM PRODUTO WHERE codigo = v_produto;
-	
-	/* Produto encontrado */
-	IF FOUND THEN
-		/* Verificar se o produto esta disponivel */
-		IF (rs.quantidade > 0) THEN
-			/* Verificar se a quantidade solicitada esta disponivel */
-			IF (v_quantidade- rs.quantidade > 0) THEN
-				
-				/* Inserir produto na venda */
-				INSERT INTO vendaproduto(venda, produto, quantidade) values
-				( v_venda, rs.codigo, v_quantidade);
-				
-				/* Atualizar estoque */
-				UPDATE produto SET quantidade = rs.quantidade - v_quantidade WHERE codigo = v_produto;
-			
-				/* Recalcular valor da venda */
-				UPDATE venda SET total = total + v_produto*v_quantidade;
-				
-				COMMIT;
-			ELSE 
-				RAISE EXCEPTION ''Quantidade solicitada indisponivel. Em estoque: '', rs.quantidade;
-			END IF;
-		ELSE
-			RAISE EXCEPTION ''Produto % indisponivel'', v_produto;
-		END IF;
-	ELSE
-		RAISE EXCEPTION ''Produto % inexistente'', v_produto;
+	SELECT INTO rs codigo, preco, quantidade FROM produto WHERE codigo = NEW.PRODUTO;
+	IF NOT FOUND THEN 
+		RAISE EXCEPTION 'Codigo de produto nao encontrado';
 	END IF;
-END;'
+
+	IF rs.quantidade - NEW.QUANTIDADE < 0 THEN 
+		RAISE EXCEPTION 'Quantidade indisponivel. No estoque: %', rs.quantidade;
+	END IF;
+
+	IF NEW.QUANTIDADE <= 0 THEN 
+		RAISE EXCEPTION 'Quantidade invalida';
+	END IF;
+	
+	IF NEW.SENHA < 0 THEN 
+		RAISE EXCEPTION 'Senha invalida';
+	END IF;
+
+	RETURN NEW;
+END;
+$valida_venda_produto$
 LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION excluirVenda(
-	v_venda IN venda.codigo%TYPE)
-RETURNS boolean AS '
+CREATE TRIGGER validacao_venda_produto BEFORE INSERT OR UPDATE ON vendaproduto
+FOR EACH ROW EXECUTE PROCEDURE valida_venda_produto();
+
+CREATE OR REPLACE FUNCTION valida_venda_produto_after() RETURNS TRIGGER AS $valida_venda_produto_after$
+DECLARE
+	rs RECORD;
 BEGIN
-	DELETE FROM vendaproduto WHERE venda = v_venda;
-	DELETE FROM venda where codigo = v_venda;
-	COMMIT;
-	EXCEPTION         
-          WHEN OTHERS THEN
-            BEGIN
-              ROLLBACK;
-              RAISE;
-            END; 
-END; '
+	SELECT INTO rs codigo, preco, quantidade FROM produto WHERE codigo = OLD.PRODUTO;
+		
+	/* Atualizar o valor da venda */
+	UPDATE venda SET total = total + rs.preco*OLD.QUANTIDADE WHERE codigo = OLD.VENDA;
+	/* Atualizar o estoque do produto*/ 
+	UPDATE produto SET quantidade = quantidade - OLD.QUANTIDADE WHERE codigo = rs.codigo;
+	
+	RETURN OLD;
+END;
+$valida_venda_produto_after$
 LANGUAGE plpgsql;
+
+CREATE TRIGGER validacao_venda_produto_after AFTER INSERT OR UPDATE ON vendaproduto
+FOR EACH ROW EXECUTE PROCEDURE valida_venda_produto_after();
+
+CREATE OR REPLACE FUNCTION valida_excluir_item_venda() RETURNS TRIGGER AS $valida_excluir_item_venda$
+DECLARE
+	rs RECORD;
+BEGIN
+	/* revertendo estoque do produto a ser removido da venda */
+	UPDATE produto SET quantidade = quantidade + OLD.QUANTIDADE;
+
+	SELECT INTO rs preco FROM produto WHERE codigo = OLD.PRODUTO;
+	
+	UPDATE venda SET total = total - OLD.QUANTIDADE*rs.preco WHERE codigo = OLD.VENDA;
+
+	RETURN OLD;
+END;
+$valida_excluir_item_venda$
+LANGUAGE 'plpgsql';
+
+CREATE TRIGGER valida_excluir_item_venda BEFORE DELETE ON vendaproduto
+FOR EACH ROW EXECUTE PROCEDURE valida_excluir_item_venda();

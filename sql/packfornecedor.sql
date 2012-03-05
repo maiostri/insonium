@@ -1,36 +1,41 @@
-CREATE OR REPLACE FUNCTION inserirFornecedor(
-	v_nome fornecedor.nome%TYPE,
-	v_endereco fornecedor.endereco%TYPE,
-	v_numero fornecedor.numero%TYPE,
-	v_cidade fornecedor.cidade%TYPE,
-	v_estado fornecedor.estado%TYPE)
-RETURNS BOOLEAN AS '
-DECLARE
+CREATE OR REPLACE FUNCTION valida_fornecedor() RETURNS TRIGGER AS $valida_fornecedor$
 BEGIN
-	INSERT INTO fornecedor (nome, endereco, numero, cidade, estado) values (v_nome, v_endereco, v_numero, v_cidade, v_estado);
-	COMMIT;
+	IF NEW.NOME IS NULL THEN 
+		RAISE EXCEPTION 'Nome invalido';
+	END IF;
+	IF NEW.ENDERECO IS NULL THEN 
+		RAISE EXCEPTION 'Endereco invalido';
+	END IF;
+	IF NEW.ESTADO IS NULL THEN 
+		RAISE EXCEPTION 'Estado invalido';
+	END IF;
+	IF NEW.CIDADE IS NULL THEN 
+		RAISE EXCEPTION 'Cidade invalida';
+	END IF;
+	IF NEW.NUMERO < 0 THEN 
+		RAISE EXCEPTION 'Numero invalido';
+	END IF;
+	RETURN NEW;
+END;
+$valida_fornecedor$
+LANGUAGE plpgsql;
+
+CREATE TRIGGER validacao_fornecedor BEFORE INSERT OR UPDATE ON fornecedor
+FOR EACH ROW EXECUTE PROCEDURE valida_fornecedor();
+
+CREATE OR REPLACE FUNCTION valida_excluir_fornecedor() RETURNS TRIGGER AS $valida_excluir_fornecedor$
+DECLARE
+	rs RECORD;
+BEGIN
+	SELECT INTO rs fornecedor FROM compra WHERE fornecedor = NEW.CODIGO;
 	
-	EXCEPTION         
-          WHEN OTHERS THEN
-            BEGIN
-              ROLLBACK;
-              RAISE;
-            END; 
-        return yes;
-END;'
+	IF FOUND THEN
+		RAISE EXCEPTION 'Fornecedor % esta presente em compras efetuadas. Remove-lo iria causar inconsistencias no banco. ', NEW.CODIGO;
+	END IF;
+	RETURN NEW;
+END;
+$valida_excluir_fornecedor$
 LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION excluirFornecedor (
-	v_codigo fornecedor.codigo%TYPE)
-RETURNS BOOLEAN AS '
-DECLARE
-BEGIN
-	SELECT fornecedor FROM compra WHERE fornecedor = v_codigo;
-	IF FOUND THEN
-		RAISE EXCEPTION ''Fornecedor % possui compras. Remove-lo iria causar inconsistencias no banco. '', v_fornecedor;
-	ELSE
-		DELETE FROM fornecedor WHERE codigo = v_codigo;
-		COMMIT;
-	END IF;
-END; '
-LANGUAGE 'plpgsql';
+CREATE TRIGGER validacao_excluir_fornecedor BEFORE DELETE ON fornecedor
+FOR EACH ROW EXECUTE PROCEDURE valida_excluir_fornecedor();

@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Menus, DB, ADODB, uCadastroProduto;
+  Dialogs, Menus, DB, ADODB;
 
 type
   TfMain = class(TForm)
@@ -18,6 +18,8 @@ type
     iCompra: TMenuItem;
     ADOConn: TADOConnection;
     procedure iProdutoClick(Sender: TObject);
+    procedure iFornecedorClick(Sender: TObject);
+    procedure mVendaClick(Sender: TObject);
 
 
   private
@@ -31,14 +33,44 @@ var
 
 implementation
 
+uses uCadastroFornecedor, uCadastroProduto, uOperacaoVenda;
+
 {$R *.dfm}
 
 procedure TfMain.iProdutoClick(Sender: TObject);
 begin
-  Application.CreateForm(TfCadastroProduto, fCadastroProduto);
+  fCadastroProduto := TfCadastroProduto.Create(Self);
+  Try
+    fCadastroProduto.ShowModal;
+  Finally
+    fCadastroProduto.Release;
+    fCadastroProduto := nil;
+  end;
 end;
 
 
+
+procedure TfMain.iFornecedorClick(Sender: TObject);
+begin
+  fCadastroFornecedor := TfCadastroFornecedor.Create(Self);
+  Try
+    fCadastroFornecedor.ShowModal;
+  Finally
+    fCadastroFornecedor.Release;
+    fCadastroFornecedor := nil;
+  end;
+end;
+
+procedure TfMain.mVendaClick(Sender: TObject);
+begin
+    fOperacaoVenda := TfOperacaoVenda.Create(Self);
+  Try
+    fOperacaoVenda.ShowModal;
+  Finally
+    fOperacaoVenda.Release;
+    fOperacaoVenda := nil;
+  end;
+end;
 
 end.
 

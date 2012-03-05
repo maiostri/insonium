@@ -1,171 +1,201 @@
 inherited fCadastroProduto: TfCadastroProduto
   Left = 253
   Caption = 'Cadastro de produtos'
-  ClientHeight = 371
-  ClientWidth = 695
+  ClientHeight = 193
+  ClientWidth = 819
   OldCreateOrder = True
   PixelsPerInch = 96
   TextHeight = 13
   object lCodigo: TLabel [0]
     Left = 16
-    Top = 24
-    Width = 72
-    Height = 24
+    Top = 88
+    Width = 66
+    Height = 27
     Caption = 'C'#243'digo'
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
     Font.Height = -21
-    Font.Name = 'Arial'
+    Font.Name = 'Trebuchet MS'
     Font.Style = [fsBold]
     ParentFont = False
   end
   object lNome: TLabel [1]
-    Left = 16
-    Top = 96
-    Width = 58
-    Height = 24
+    Left = 200
+    Top = 88
+    Width = 56
+    Height = 27
     Caption = 'Nome'
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
     Font.Height = -21
-    Font.Name = 'Arial'
+    Font.Name = 'Trebuchet MS'
     Font.Style = [fsBold]
     ParentFont = False
   end
   object lQuantidade: TLabel [2]
     Left = 16
-    Top = 168
-    Width = 116
-    Height = 24
-    Caption = 'Quantidade'
+    Top = 136
+    Width = 47
+    Height = 27
+    Caption = 'Qtde'
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
     Font.Height = -21
-    Font.Name = 'Arial'
+    Font.Name = 'Trebuchet MS'
     Font.Style = [fsBold]
     ParentFont = False
   end
   object lPreco: TLabel [3]
-    Left = 16
-    Top = 240
-    Width = 59
-    Height = 24
+    Left = 200
+    Top = 136
+    Width = 56
+    Height = 27
     Caption = 'Pre'#231'o'
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
     Font.Height = -21
-    Font.Name = 'Arial'
+    Font.Name = 'Trebuchet MS'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object Label1: TLabel [4]
+    Left = 368
+    Top = 136
+    Width = 117
+    Height = 27
+    Caption = 'Gerar senha'
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Trebuchet MS'
     Font.Style = [fsBold]
     ParentFont = False
   end
   inherited bInserir: TBitBtn
-    Left = 552
     Top = 8
   end
   inherited bRemover: TBitBtn
-    Left = 552
-    Top = 128
-    OnClick = bRemoverClick
+    Top = 8
   end
   inherited bPrimeiro: TBitBtn
-    Left = 552
-    Top = 168
+    Top = 40
   end
   inherited bAnterior: TBitBtn
-    Left = 552
-    Top = 208
+    Top = 40
   end
   inherited bProximo: TBitBtn
-    Left = 552
-    Top = 248
+    Top = 40
   end
   inherited bUltimo: TBitBtn
-    Left = 552
-    Top = 288
+    Top = 40
   end
   inherited bSalvar: TBitBtn
-    Left = 552
-    Top = 88
+    Top = 8
   end
   inherited bEditar: TBitBtn
-    Left = 552
-    Top = 48
+    Top = 8
   end
   inherited bSair: TButton
-    Left = 552
-    Top = 328
-  end
-  object eCodigo: TDBEdit [13]
-    Left = 16
-    Top = 48
-    Width = 81
-    Height = 31
-    DataField = 'codigo'
-    DataSource = dsQuery
-    Enabled = False
-    Font.Charset = ANSI_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -20
-    Font.Name = 'Arial'
-    Font.Style = []
-    ParentFont = False
-    TabOrder = 9
+    Top = 8
+    OnClick = bSairClick
   end
   object eNome: TDBEdit [14]
-    Left = 16
-    Top = 120
-    Width = 505
-    Height = 31
+    Left = 272
+    Top = 88
+    Width = 529
+    Height = 35
     DataField = 'nome'
     DataSource = dsQuery
     Enabled = False
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
-    Font.Height = -20
-    Font.Name = 'Arial'
-    Font.Style = []
+    Font.Height = -21
+    Font.Name = 'Trebuchet MS'
+    Font.Style = [fsBold]
     ParentFont = False
-    TabOrder = 10
+    TabOrder = 11
   end
   object eQuantidade: TDBEdit [15]
-    Left = 16
-    Top = 192
-    Width = 73
-    Height = 31
+    Left = 96
+    Top = 136
+    Width = 81
+    Height = 35
     DataField = 'quantidade'
     DataSource = dsQuery
     Enabled = False
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
-    Font.Height = -20
-    Font.Name = 'Arial'
-    Font.Style = []
+    Font.Height = -21
+    Font.Name = 'Trebuchet MS'
+    Font.Style = [fsBold]
     ParentFont = False
-    TabOrder = 11
+    TabOrder = 12
   end
   object ePreco: TDBEdit [16]
-    Left = 16
-    Top = 264
+    Left = 272
+    Top = 136
     Width = 73
-    Height = 31
+    Height = 35
     DataField = 'preco'
     DataSource = dsQuery
     Enabled = False
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
-    Font.Height = -20
-    Font.Name = 'Arial'
-    Font.Style = []
+    Font.Height = -21
+    Font.Name = 'Trebuchet MS'
+    Font.Style = [fsBold]
     ParentFont = False
-    TabOrder = 12
+    TabOrder = 13
+  end
+  object eCodigo: TDBEdit [17]
+    Left = 96
+    Top = 88
+    Width = 81
+    Height = 35
+    DataField = 'codigo'
+    DataSource = dsQuery
+    Enabled = False
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Trebuchet MS'
+    Font.Style = [fsBold]
+    ParentFont = False
+    TabOrder = 10
+  end
+  object cbGeraSenha: TComboBox [18]
+    Left = 504
+    Top = 136
+    Width = 73
+    Height = 35
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Trebuchet MS'
+    Font.Style = [fsBold]
+    ItemHeight = 27
+    ItemIndex = 0
+    ParentFont = False
+    TabOrder = 14
+    Text = 'Sim'
+    OnChange = cbGeraSenhaChange
+    Items.Strings = (
+      'Sim'
+      'N'#227'o')
+  end
+  inherited bCancelar: TButton
+    Top = 40
   end
   inherited adoQuery: TADOQuery
     SQL.Strings = (
-      'select codigo, nome, quantidade, preco from produto;'
-      '')
-    Top = 56
-    object adoQuerycodigo: TIntegerField
+      
+        'select codigo, nome, quantidade, preco, gerasenha from produto o' +
+        'rder by codigo')
+    Left = 776
+    Top = 320
+    object adoQuerycodigo: TAutoIncField
       FieldName = 'codigo'
+      ReadOnly = True
     end
     object adoQuerynome: TWideStringField
       FieldName = 'nome'
@@ -179,9 +209,13 @@ inherited fCadastroProduto: TfCadastroProduto
       Precision = 28
       Size = 6
     end
+    object adoQuerygerasenha: TIntegerField
+      FieldName = 'gerasenha'
+    end
   end
   inherited dsQuery: TDataSource
-    Left = 248
-    Top = 56
+    OnDataChange = dsQueryDataChange
+    Left = 744
+    Top = 320
   end
 end

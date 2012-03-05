@@ -19,6 +19,7 @@ type
     bSair: TButton;
     adoQuery: TADOQuery;
     dsQuery: TDataSource;
+    bCancelar: TButton;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure bPrimeiroClick(Sender: TObject);
     procedure bAnteriorClick(Sender: TObject);
@@ -26,11 +27,13 @@ type
     procedure bUltimoClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
-    procedure bSairClick(Sender: TObject);
     procedure bInserirClick(Sender: TObject);
     procedure bEditarClick(Sender: TObject);
     procedure bSalvarClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
+    procedure bRemoverClick(Sender: TObject);
+    procedure dsQueryStateChange(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure bCancelarClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -39,8 +42,7 @@ type
 
 var
   fCadastroPrincipal: TfCadastroPrincipal;
-  codigo : Integer;
-
+  
 implementation
 
 uses uMain;
@@ -92,63 +94,98 @@ end;
 procedure TfCadastroPrincipal.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  if GetKeyState(VK_F1) < 0  then
+  if key = VK_F1  then
     bInserir.OnClick(fCadastroPrincipal)
-  else if GetKeyState(VK_F2) < 0  then
+  else if key = VK_F2  then
     bEditar.OnClick(fCadastroPrincipal)
-  else if GetKeyState(VK_F3) < 0  then
+  else if key = VK_F3  then
     bSalvar.OnClick(fCadastroPrincipal)
-  else if GetKeyState(VK_F4) < 0  then
+  else if key = VK_F4  then
     bRemover.OnClick(fCadastroPrincipal)
-  else if GetKeyState(VK_F8) < 0  then
+  else if key = VK_F8  then
     bSair.OnClick(fCadastroPrincipal)
-  else if GetKeyState(VK_F9) < 0  then
+  else if key = VK_F9  then
     bPrimeiro.OnClick(fCadastroPrincipal)
-  else if GetKeyState(VK_F10) < 0  then
+  else if key = VK_F10  then
     bAnterior.OnClick(fCadastroPrincipal)
-  else if GetKeyState(VK_F11) < 0  then
+  else if key = VK_F11  then
     bProximo.OnClick(fCadastroPrincipal)
-  else if GetKeyState(VK_F12) < 0  then
+  else if key = VK_F12  then
     bUltimo.OnClick(fCadastroPrincipal);
 
 end;
 
-procedure TfCadastroPrincipal.bSairClick(Sender: TObject);
-begin
-  fCadastroPrincipal.Close;
-end;
-
 procedure TfCadastroPrincipal.bInserirClick(Sender: TObject);
 begin
-  bRemover.Enabled := false;
-  bEditar.Enabled := false;
-  bSalvar.Enabled := true;
+  Try
+    adoQuery.Insert;
+  except
+      on E : Exception do
+      ShowMessage(E.ClassName+' '+ E.Message);
+  end;
 end;
 
 procedure TfCadastroPrincipal.bEditarClick(Sender: TObject);
 begin
-  bInserir.Enabled := false;
-  bRemover.Enabled := false;
+  Try
+    adoQuery.Edit;
+  except
+      on E : Exception do
+      ShowMessage(E.ClassName+' '+ E.Message);
+  end;
 end;
 
 procedure TfCadastroPrincipal.bSalvarClick(Sender: TObject);
 begin
-  bInserir.Enabled := true;
-  bRemover.Enabled := true;
+  Try
+    adoQuery.Post;
+  except
+      on E : Exception do
+      ShowMessage(E.ClassName+' '+ E.Message);
+  end;
 end;
 
-procedure TfCadastroPrincipal.FormCreate(Sender: TObject);
+procedure TfCadastroPrincipal.bRemoverClick(Sender: TObject);
 begin
-  if adoQuery.RecordCount = 1 then
-  begin
-    bEditar.Enabled := true;
-    bRemover.Enabled := true;
-  end
-  else if adoQuery.RecordCount > 1 then
-  begin
-    bProximo.Enabled := true;
-    bUltimo.Enabled := true;
+  Try
+    adoQuery.Delete;
+  except
+      on E : Exception do
+      ShowMessage(E.ClassName+' '+ E.Message);
   end;
+end;
+
+procedure TfCadastroPrincipal.dsQueryStateChange(Sender: TObject);
+begin
+   if TDataSource(Sender).DataSet.State in [dsEdit,dsInsert] then //Se tiver em mode de edição ou iserção
+  begin
+    bInserir.Enabled := false;
+    bEditar.Enabled := false;
+    bSalvar.Enabled := True;
+    bRemover.Enabled := False;
+    bCancelar.Enabled := True;
+  end else
+  if TDataSource(Sender).DataSet.State = dsbrowse then //em modo de consulta
+  begin
+    bInserir.Enabled := true;
+    bEditar.Enabled := true;
+    bSalvar.Enabled := false;
+    bRemover.Enabled := true;
+    bCancelar.Enabled := false;
+  end;
+end;
+
+procedure TfCadastroPrincipal.FormShow(Sender: TObject);
+begin
+  adoQuery.Open;
+  bProximo.Enabled := adoQuery.RecordCount > 1;
+  bUltimo.Enabled := adoQuery.RecordCount > 1;
+
+end;
+
+procedure TfCadastroPrincipal.bCancelarClick(Sender: TObject);
+begin
+    adoQuery.Cancel;
 end;
 
 end.

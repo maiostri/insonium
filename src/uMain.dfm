@@ -3,6 +3,7 @@ object fMain: TfMain
   Top = 114
   Width = 928
   Height = 480
+  BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'insonium'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -26,12 +27,14 @@ object fMain: TfMain
       end
       object iFornecedor: TMenuItem
         Caption = '&Fornecedor'
+        OnClick = iFornecedorClick
       end
     end
     object Operaes1: TMenuItem
       Caption = '&Opera'#231#245'es'
       object mVenda: TMenuItem
         Caption = '&Venda'
+        OnClick = mVendaClick
       end
       object iCompra: TMenuItem
         Caption = '&Compra'

@@ -37,12 +37,16 @@ CREATE SEQUENCE seqvenda
       MINVALUE   0
       NO CYCLE; 
 	   
-create table produto (
-	codigo integer PRIMARY KEY,
-	nome text NOT NULL, 
-	preco numeric NOT NULL CHECK (preco > 0),
-	quantidade integer NOT NULL CHECK (quantidade >= 0)
-);
+CREATE TABLE produto
+(
+  codigo integer DEFAULT nextval('seqproduto') NOT NULL,
+  nome text NOT NULL,
+  preco numeric NOT NULL,
+  quantidade integer NOT NULL,
+  CONSTRAINT produto_pkey PRIMARY KEY (codigo ),
+  CONSTRAINT produto_preco_check CHECK (preco > 0::numeric),
+  CONSTRAINT produto_quantidade_check CHECK (quantidade >= 0)
+)
 
 create table venda (
 	codigo integer PRIMARY KEY,
@@ -57,13 +61,16 @@ create table vendaproduto (
 	PRIMARY KEY (venda, produto)	
 );
 
-create table fornecedor (
-	codigo integer PRIMARY KEY,
-	nome varchar(50) NOT NULL,
-	endereco varchar(100) NOT NULL,
-	numero integer NOT NULL CHECK (numero > 0),
-	cidade varchar(100) NOT NULL,
-	estado varchar(2) NOT NULL
+CREATE TABLE fornecedor
+(
+  codigo integer DEFAULT nextval('seqfornecedor') NOT NULL,
+  nome character varying(50) NOT NULL,
+  endereco character varying(100) NOT NULL,
+  numero integer NOT NULL,
+  cidade character varying(100) NOT NULL,
+  estado character varying(2) NOT NULL,
+  CONSTRAINT fornecedor_pkey PRIMARY KEY (codigo ),
+  CONSTRAINT fornecedor_numero_check CHECK (numero > 0)
 );
 
 create table compra (

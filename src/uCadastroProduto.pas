@@ -4,11 +4,11 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, uCadastroPrincipal, StdCtrls, Buttons, Mask, DBCtrls, DB, ADODB;
+  Dialogs, uCadastroPrincipal, StdCtrls, Buttons, Mask, DBCtrls, DB, ADODB,
+  ExtCtrls;
 
 type
   TfCadastroProduto = class(TfCadastroPrincipal)
-    eCodigo: TDBEdit;
     eNome: TDBEdit;
     eQuantidade: TDBEdit;
     lCodigo: TLabel;
@@ -16,15 +16,19 @@ type
     lQuantidade: TLabel;
     lPreco: TLabel;
     ePreco: TDBEdit;
-    adoQuerycodigo: TIntegerField;
+    eCodigo: TDBEdit;
+    cbGeraSenha: TComboBox;
+    adoQuerycodigo: TAutoIncField;
     adoQuerynome: TWideStringField;
     adoQueryquantidade: TIntegerField;
     adoQuerypreco: TBCDField;
-    procedure FormCreate(Sender: TObject);
+    adoQuerygerasenha: TIntegerField;
+    Label1: TLabel;
+    procedure bSairClick(Sender: TObject);
+    procedure dsQueryStateChange(Sender: TObject);
+    procedure cbGeraSenhaChange(Sender: TObject);
+    procedure dsQueryDataChange(Sender: TObject; Field: TField);
     procedure bInserirClick(Sender: TObject);
-    procedure bSalvarClick(Sender: TObject);
-    procedure bRemoverClick(Sender: TObject);
-    procedure bEditarClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -38,56 +42,45 @@ implementation
 
 {$R *.dfm}
 
-procedure TfCadastroProduto.FormCreate(Sender: TObject);
+procedure TfCadastroProduto.bSairClick(Sender: TObject);
 begin
   inherited;
-  adoQuery.SQL.Text := 'select codigo, nome, quantidade, preco from produto';
-  adoQuery.Open;
+  fCadastroProduto.Close;
+end;
+
+procedure TfCadastroProduto.dsQueryStateChange(Sender: TObject);
+begin
+  inherited;
+  eNome.Enabled := TDataSource(Sender).DataSet.State in [dsEdit,dsInsert];
+  eQuantidade.Enabled := TDataSource(Sender).DataSet.State in [dsEdit,dsInsert];
+  ePreco.Enabled := TDataSource(Sender).DataSet.State in [dsEdit,dsInsert];
+  cbGeraSenha.Enabled := TDataSource(Sender).DataSet.State in [dsEdit,dsInsert];
+
+end;
+
+procedure TfCadastroProduto.cbGeraSenhaChange(Sender: TObject);
+begin
+  inherited;
+    if cbGeraSenha.ItemIndex = 0 then
+        adoQuery.FieldByName('gerasenha').Value := 1
+    else
+        adoQuery.FieldByName('gerasenha').Value := 0;
+end;
+
+procedure TfCadastroProduto.dsQueryDataChange(Sender: TObject;
+  Field: TField);
+begin
+  inherited;
+  if adoQuery.FieldByName('gerasenha').AsInteger = 0 then
+        cbGeraSenha.Text := 'Não'
+  else
+        cbGeraSenha.Text := 'Sim';
 end;
 
 procedure TfCadastroProduto.bInserirClick(Sender: TObject);
 begin
   inherited;
-  eNome.Enabled := true;
-  eQuantidade.Enabled := true;
-  ePreco.Enabled := true;
-end;
-
-procedure TfCadastroProduto.bSalvarClick(Sender: TObject);
-begin
-  inherited;
-  Try
-    adoQuery.SQL.Text := 'select inserirproduto('+eNome.Text +', '+
-                                            eQuantidade.Text +', '+
-                                            ePreco.Text +')';
-    adoQuery.ExecSQL;
-  except
-    on E : Exception do
-      ShowMessage(E.ClassName+' error raised, with message : '+E.Message);
-  end;
-  eNome.Enabled := false;
-  eQuantidade.Enabled := false;
-  ePreco.Enabled := false;
-end;
-
-procedure TfCadastroProduto.bRemoverClick(Sender: TObject);
-begin
-  inherited;
-  Try
-    adoQuery.SQL.Text := 'select excluirproduto('+IntToStr(codigo)+')';
-    adoQuery.ExecSQL;
-  except
-    on E : Exception do
-      ShowMessage(E.ClassName+' error raised, with message : '+E.Message);
-  end;
-end;
-
-procedure TfCadastroProduto.bEditarClick(Sender: TObject);
-begin
-  inherited;
-  eNome.Enabled := true;
-  eQuantidade.Enabled := true;
-  ePreco.Enabled := true;
+    eNome.SetFocus;
 end;
 
 end.

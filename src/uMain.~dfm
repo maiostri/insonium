@@ -26,12 +26,14 @@ object fMain: TfMain
       end
       object iFornecedor: TMenuItem
         Caption = '&Fornecedor'
+        OnClick = iFornecedorClick
       end
     end
     object Operaes1: TMenuItem
       Caption = '&Opera'#231#245'es'
       object mVenda: TMenuItem
         Caption = '&Venda'
+        OnClick = mVendaClick
       end
       object iCompra: TMenuItem
         Caption = '&Compra'
@@ -47,13 +49,7 @@ object fMain: TfMain
       'Provider=MSDASQL.1;Persist Security Info=False;Data Source=inson' +
       'ium'
     LoginPrompt = False
-    Left = 128
+    Left = 88
     Top = 32
-  end
-  object ADOTable1: TADOTable
-    Connection = ADOConn
-    TableName = 'produto'
-    Left = 184
-    Top = 40
   end
 end
