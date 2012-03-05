@@ -1,0 +1,218 @@
+inherited fCadastroFornecedor: TfCadastroFornecedor
+  Caption = 'Cadastro de Fornecedores'
+  OldCreateOrder = True
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Label1: TLabel [0]
+    Left = 24
+    Top = 16
+    Width = 58
+    Height = 24
+    Caption = 'codigo'
+    FocusControl = eCodigo
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label2: TLabel [1]
+    Left = 24
+    Top = 88
+    Width = 49
+    Height = 24
+    Caption = 'nome'
+    FocusControl = eNome
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label3: TLabel [2]
+    Left = 24
+    Top = 168
+    Width = 82
+    Height = 24
+    Caption = 'endereco'
+    FocusControl = eEndereco
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label4: TLabel [3]
+    Left = 576
+    Top = 168
+    Width = 66
+    Height = 24
+    Caption = 'numero'
+    FocusControl = eNumero
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label5: TLabel [4]
+    Left = 576
+    Top = 248
+    Width = 56
+    Height = 24
+    Caption = 'estado'
+    FocusControl = eEstado
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+  end
+  object Label6: TLabel [5]
+    Left = 24
+    Top = 248
+    Width = 57
+    Height = 24
+    Caption = 'cidade'
+    FocusControl = eCidade
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+  end
+  inherited bSair: TButton
+    OnClick = bSairClick
+  end
+  object eCodigo: TDBEdit [15]
+    Left = 24
+    Top = 48
+    Width = 134
+    Height = 31
+    DataField = 'codigo'
+    DataSource = dsQuery
+    Enabled = False
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -20
+    Font.Name = 'Arial'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 9
+  end
+  object eNome: TDBEdit [16]
+    Left = 24
+    Top = 120
+    Width = 654
+    Height = 31
+    DataField = 'nome'
+    DataSource = dsQuery
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -20
+    Font.Name = 'Arial'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 10
+  end
+  object eEndereco: TDBEdit [17]
+    Left = 24
+    Top = 199
+    Width = 521
+    Height = 31
+    DataField = 'endereco'
+    DataSource = dsQuery
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -20
+    Font.Name = 'Arial'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 11
+  end
+  object eNumero: TDBEdit [18]
+    Left = 576
+    Top = 200
+    Width = 89
+    Height = 31
+    DataField = 'numero'
+    DataSource = dsQuery
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -20
+    Font.Name = 'Arial'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 12
+  end
+  object eEstado: TDBEdit [19]
+    Left = 576
+    Top = 280
+    Width = 49
+    Height = 31
+    DataField = 'estado'
+    DataSource = dsQuery
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -20
+    Font.Name = 'Arial'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 14
+  end
+  object eCidade: TDBEdit [20]
+    Left = 24
+    Top = 280
+    Width = 521
+    Height = 31
+    DataField = 'cidade'
+    DataSource = dsQuery
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -20
+    Font.Name = 'Arial'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 13
+  end
+  inherited adoQuery: TADOQuery
+    SQL.Strings = (
+      
+        'select codigo, nome, endereco, numero, estado, cidade from forne' +
+        'cedor order by codigo')
+    Left = 272
+    Top = 16
+    object adoQuerycodigo: TAutoIncField
+      FieldName = 'codigo'
+      ReadOnly = True
+    end
+    object adoQuerynome: TWideStringField
+      FieldName = 'nome'
+      Size = 50
+    end
+    object adoQueryendereco: TWideStringField
+      FieldName = 'endereco'
+      Size = 100
+    end
+    object adoQuerynumero: TIntegerField
+      FieldName = 'numero'
+    end
+    object adoQueryestado: TWideStringField
+      FieldName = 'estado'
+      Size = 2
+    end
+    object adoQuerycidade: TWideStringField
+      FieldName = 'cidade'
+      Size = 100
+    end
+  end
+  inherited dsQuery: TDataSource
+    Top = 16
+  end
+end

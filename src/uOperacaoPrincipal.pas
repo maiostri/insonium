@@ -1,0 +1,265 @@
+unit uOperacaoPrincipal;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, DB, ADODB, Grids, DBGrids, StdCtrls, Mask, DBCtrls, uMain;
+
+type
+   
+    TfOperacaoPrincipal = class(TForm)
+    adoQuery: TADOQuery;
+    dsQuery: TDataSource;
+    bInserir: TButton;
+    bRemover: TButton;
+    bFinalizar: TButton;
+    bNovoItem: TButton;
+    bExcluirItem: TButton;
+    adoQueryItem: TADOQuery;
+    dsQueryItem: TDataSource;
+    bSair: TButton;
+    eValorPago: TEdit;
+    eTroco: TEdit;
+    bOK: TButton;
+    eCodigo: TEdit;
+    eNome: TEdit;
+    eQuantidade: TEdit;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    bPrimeiro: TButton;
+    bAnterior: TButton;
+    bProximo: TButton;
+    bUltimo: TButton;
+    eTotal: TDBEdit;
+    dbCodigo: TDBEdit;
+    eData: TDBEdit;
+    Label7: TLabel;
+    adoQueryProduto: TADOQuery;
+    Label8: TLabel;
+    dItem: TDBGrid;
+    procedure bInserirClick(Sender: TObject);
+    procedure bRemoverClick(Sender: TObject);
+    procedure bFinalizarClick(Sender: TObject);
+    procedure bPrimeiroClick(Sender: TObject);
+    procedure bAnteriorClick(Sender: TObject);
+    procedure bProximoClick(Sender: TObject);
+    procedure bUltimoClick(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure FormCreate(Sender: TObject);
+    procedure eCodigoExit(Sender: TObject);
+    procedure bOKClick(Sender: TObject);
+    procedure bNovoItemClick(Sender: TObject);
+    procedure eValorPagoKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure eValorPagoKeyPress(Sender: TObject; var Key: Char);
+    procedure FormShow(Sender: TObject);
+    procedure eQuantidadeKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  fOperacaoPrincipal: TfOperacaoPrincipal;
+
+implementation
+
+{$R *.dfm}
+
+procedure TfOperacaoPrincipal.bInserirClick(Sender: TObject);
+begin
+  eCodigo.Enabled := true;
+  eQuantidade.Enabled := true;
+  eValorPago.Text := '';
+  eTroco.Text := '';
+  eCodigo.Text := '';
+  eNome.Text := '';
+  eQuantidade.Text := '';
+  eCodigo.SetFocus;
+  bRemover.Enabled := false;
+  bSair.Enabled := false;
+  bInserir.Enabled := false;
+  bAnterior.Enabled := false;
+  bProximo.Enabled := false;
+  bPrimeiro.Enabled := false;
+  bUltimo.Enabled := false;
+  bOK.Enabled := true;
+  bNovoItem.Enabled := true;
+  bFinalizar.Enabled := true;
+end;
+
+procedure TfOperacaoPrincipal.bRemoverClick(Sender: TObject);
+begin
+  adoQuery.Delete;
+end;
+
+procedure TfOperacaoPrincipal.bFinalizarClick(Sender: TObject);
+begin
+  eValorPago.Enabled := true;
+  eValorPago.SetFocus;
+  bNovoItem.Enabled := false;
+  bExcluirItem.Enabled := false;
+  bInserir.Enabled := true;
+  bRemover.Enabled := true;
+  bSair.Enabled := true;
+  bFinalizar.Enabled := false;
+  eValorPago.Enabled := false;
+  eTroco.Enabled := false;
+end;
+
+procedure TfOperacaoPrincipal.bPrimeiroClick(Sender: TObject);
+begin
+  if (adoQuery <> nil) then
+    adoQuery.First;
+end;
+
+procedure TfOperacaoPrincipal.bAnteriorClick(Sender: TObject);
+begin
+    if (adoQuery <> nil) then
+      adoQuery.Prior;
+end;
+
+procedure TfOperacaoPrincipal.bProximoClick(Sender: TObject);
+begin
+  if (adoQuery <> nil) then
+    adoQuery.Next;
+end;
+
+procedure TfOperacaoPrincipal.bUltimoClick(Sender: TObject);
+begin
+  if (adoQuery <> nil) then
+    adoQuery.Last;
+end;
+
+procedure TfOperacaoPrincipal.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+ if key = VK_F1  then
+    bInserir.OnClick(fOperacaoPrincipal)
+  else if key = VK_F3  then
+    bFinalizar.OnClick(fOperacaoPrincipal)
+  else if key = VK_F4  then
+    bRemover.OnClick(fOperacaoPrincipal)
+  else if key = VK_F8  then
+    bSair.OnClick(fOperacaoPrincipal)
+  else if key = VK_F9  then
+    bPrimeiro.OnClick(fOperacaoPrincipal)
+  else if key = VK_F10  then
+    bAnterior.OnClick(fOperacaoPrincipal)
+  else if key = VK_F11  then
+    bProximo.OnClick(fOperacaoPrincipal)
+  else if key = VK_F12  then
+    bUltimo.OnClick(fOperacaoPrincipal)
+  else if Key = VK_ADD then
+  begin
+    eCodigo.Enabled := true;
+    eQuantidade.Enabled := true;
+    eCodigo.Clear;
+    eNome.Clear;
+    eQuantidade.Clear;
+    bOK.Enabled := true;
+    eCodigo.SetFocus;
+  end
+  else if key = VK_SUBTRACT then
+    bExcluirItem.OnClick(fOperacaoPrincipal)
+  else if key = VK_END then
+    eValorPago.SetFocus;
+end;
+
+procedure TfOperacaoPrincipal.FormCreate(Sender: TObject);
+begin
+  adoQuery.Open;
+end;
+
+procedure TfOperacaoPrincipal.eCodigoExit(Sender: TObject);
+begin
+  if eCodigo.Text <> '' then
+  begin
+    adoQueryProduto.Close;
+    adoQueryProduto.SQL.Text := 'select codigo, nome from produto where codigo = :cod';
+    adoQueryProduto.Parameters.ParamByName('cod').Value := eCodigo.Text;
+    adoQueryProduto.Open;
+    if adoQueryProduto.RecordCount > 0 then
+     begin
+        eNome.Text := adoQueryProduto.Fields[1].AsString;
+        eQuantidade.SetFocus;
+    end;
+  end;
+end;
+
+procedure TfOperacaoPrincipal.bOKClick(Sender: TObject);
+begin
+  bFinalizar.Enabled := true;
+  eCodigo.Enabled := false;
+  eQuantidade.Enabled := false;
+  bNovoItem.Enabled := true;
+  bExcluirItem.Enabled := true;
+  eValorPago.Enabled := true;
+end;
+
+procedure TfOperacaoPrincipal.bNovoItemClick(Sender: TObject);
+begin
+  eCodigo.Enabled := true;
+  eQuantidade.Enabled := true;
+  eCodigo.SetFocus;
+  bOK.Enabled := true;
+  eCodigo.Text := '';
+  eNome.Text := '';
+  eQuantidade.Text := '';
+end;
+
+procedure TfOperacaoPrincipal.eValorPagoKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+var
+  valorpago, troco : real;
+begin
+  if key = 13 then
+    begin
+      if eValorPago.Text <> '' then
+        begin
+            valorpago := StrToFloat(eValorPago.Text);
+            if (valorpago < adoQuery.FieldByName('total').AsFloat) then
+            begin
+                ShowMessage('Valor inferior ao total da conta');
+                eValorPago.Clear;
+                eValorPago.SetFocus;
+            end
+            else
+            begin
+                troco := valorpago - adoQuery.FieldByName('total').AsFloat;
+                eTroco.Text := FloatToStr(troco);
+                eValorPago.Enabled := false;
+             end;
+         end;
+    end;
+end;
+
+procedure TfOperacaoPrincipal.eValorPagoKeyPress(Sender: TObject;
+  var Key: Char);
+begin
+    if not (Key in['0'..'9',Chr(8), chr(46)]) then Key:= #0;
+
+end;
+
+procedure TfOperacaoPrincipal.FormShow(Sender: TObject);
+begin
+    bInserir.Enabled := true;
+    if adoQuery.RecordCount > 0 then bRemover.Enabled := true;
+    bSair.Enabled := true;
+end;
+
+procedure TfOperacaoPrincipal.eQuantidadeKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+    if key = VK_RETURN then bOK.OnClick(fOperacaoPrincipal);
+end;
+
+end.
