@@ -40,8 +40,16 @@ object fMain: TfMain
         Caption = '&Compra'
       end
     end
-    object Sobre1: TMenuItem
-      Caption = 'Sobre'
+    object Relatrios1: TMenuItem
+      Caption = 'Relat'#243'rios'
+      object Produtoporcdigo1: TMenuItem
+        Caption = 'Produto por c'#243'digo'
+        OnClick = Produtoporcdigo1Click
+      end
+      object RelatriodeVendas1: TMenuItem
+        Caption = 'Relat'#243'rio de vendas'
+        OnClick = RelatriodeVendas1Click
+      end
     end
   end
   object ADOConn: TADOConnection

@@ -1,0 +1,812 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 9.1.3
+-- Dumped by pg_dump version 9.1.3
+-- Started on 2012-03-10 18:19:49
+
+SET statement_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+
+--
+-- TOC entry 171 (class 3079 OID 11639)
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- TOC entry 1933 (class 0 OID 0)
+-- Dependencies: 171
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+SET search_path = public, pg_catalog;
+
+--
+-- TOC entry 183 (class 1255 OID 16470)
+-- Dependencies: 5 525
+-- Name: valida_compra(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION valida_compra() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+	IF NEW.TOTAL < 0 THEN 
+		RAISE EXCEPTION 'Valor invalido';
+	END IF;
+
+	RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.valida_compra() OWNER TO postgres;
+
+--
+-- TOC entry 184 (class 1255 OID 16471)
+-- Dependencies: 5 525
+-- Name: valida_excluir_fornecedor(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION valida_excluir_fornecedor() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+	rs RECORD;
+BEGIN
+	SELECT INTO rs fornecedor FROM compra WHERE fornecedor = NEW.CODIGO;
+	
+	IF FOUND THEN
+		RAISE EXCEPTION 'Fornecedor % esta presente em compras efetuadas. Remove-lo iria causar inconsistencias no banco. ', NEW.CODIGO;
+	END IF;
+	RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.valida_excluir_fornecedor() OWNER TO postgres;
+
+--
+-- TOC entry 185 (class 1255 OID 16472)
+-- Dependencies: 5 525
+-- Name: valida_excluir_item_venda(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION valida_excluir_item_venda() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+	reg vendaproduto%ROWTYPE;
+	rs RECORD;
+	rsproduto RECORD;
+	bsenha integer;
+BEGIN
+	bsenha = 0;
+	/* revertendo estoque do produto a ser removido da venda */
+	UPDATE produto SET quantidade = quantidade + OLD.QUANTIDADE;
+
+	SELECT INTO rs preco FROM produto WHERE codigo = OLD.PRODUTO;
+	
+	UPDATE venda SET total = total - OLD.QUANTIDADE*rs.preco WHERE codigo = OLD.VENDA;
+
+	/* Caso o item da venda fosse o unico a gerar senha, reverter */
+	FOR reg in 
+		SELECT produto FROM vendaproduto WHERE venda = OLD.VENDA
+	LOOP
+		SELECT INTO rsproduto gerasenha FROM produto WHERE codigo = reg.produto;
+		IF rsproduto.gerasenha = 1 THEN 
+		BEGIN 
+			bsenha = 1;
+			EXIT;
+		END;
+		END IF;
+	END LOOP; 
+
+	IF bsenha = 0 THEN 
+		UPDATE venda SET senha = 0 WHERE codigo = OLD.VENDA;
+	END IF;
+
+	RETURN OLD;
+END;
+$$;
+
+
+ALTER FUNCTION public.valida_excluir_item_venda() OWNER TO postgres;
+
+--
+-- TOC entry 186 (class 1255 OID 16473)
+-- Dependencies: 5 525
+-- Name: valida_excluir_produto(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION valida_excluir_produto() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+	rs RECORD;
+BEGIN
+	SELECT INTO rs produto FROM vendaproduto WHERE produto = NEW.CODIGO;
+	
+	IF FOUND THEN
+		RAISE EXCEPTION 'Produto % esta presente em vendas efetuadas. Remove-lo iria causar inconsistencias no banco. ', NEW.CODIGO;
+	END IF;
+	
+	SELECT INTO rs produto FROM compraproduto WHERE produto = NEW.CODIGO;
+	IF FOUND THEN
+		RAISE EXCEPTION 'Produto % esta presente em compras efetuadas. Remove-lo iria causar inconsistencias no banco. ', NEW.CODIGO;
+	END IF;
+	RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.valida_excluir_produto() OWNER TO postgres;
+
+--
+-- TOC entry 187 (class 1255 OID 16474)
+-- Dependencies: 525 5
+-- Name: valida_excluir_venda(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION valida_excluir_venda() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+	reg vendaproduto%ROWTYPE;
+BEGIN
+	/* revertendo estoque da venda a ser removida */
+	FOR reg in 
+		SELECT venda, produto, quantidade FROM vendaproduto WHERE venda = OLD.CODIGO
+	LOOP
+		UPDATE produto SET quantidade = quantidade + reg.quantidade WHERE codigo = reg.produto;
+	END LOOP;
+
+	DELETE FROM vendaproduto WHERE venda = OLD.CODIGO;
+
+	RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.valida_excluir_venda() OWNER TO postgres;
+
+--
+-- TOC entry 188 (class 1255 OID 16475)
+-- Dependencies: 5 525
+-- Name: valida_fornecedor(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION valida_fornecedor() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+	IF NEW.NOME IS NULL THEN 
+		RAISE EXCEPTION 'Nome invalido';
+	END IF;
+	IF NEW.ENDERECO IS NULL THEN 
+		RAISE EXCEPTION 'Endereco invalido';
+	END IF;
+	IF NEW.ESTADO IS NULL THEN 
+		RAISE EXCEPTION 'Estado invalido';
+	END IF;
+	IF NEW.CIDADE IS NULL THEN 
+		RAISE EXCEPTION 'Cidade invalida';
+	END IF;
+	IF NEW.NUMERO < 0 THEN 
+		RAISE EXCEPTION 'Numero invalido';
+	END IF;
+	RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.valida_fornecedor() OWNER TO postgres;
+
+--
+-- TOC entry 189 (class 1255 OID 16476)
+-- Dependencies: 5 525
+-- Name: valida_produto(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION valida_produto() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+	IF NEW.QUANTIDADE < 0 THEN 
+		RAISE EXCEPTION 'Quantidade invalida';
+	END IF;
+	IF NEW.PRECO < 0 THEN 
+		RAISE EXCEPTION 'Preco invalido';
+	END IF;
+	IF NEW.NOME IS NULL THEN 
+		RAISE EXCEPTION 'Nome invalido';
+	END IF;
+
+	RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.valida_produto() OWNER TO postgres;
+
+--
+-- TOC entry 190 (class 1255 OID 16477)
+-- Dependencies: 525 5
+-- Name: valida_venda(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION valida_venda() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+	IF NEW.TOTAL < 0 THEN 
+		RAISE EXCEPTION 'Valor invalido';
+	END IF;
+	IF NEW.SENHA < 0 THEN 
+		RAISE EXCEPTION 'Senha invalida';
+	END IF;
+
+	RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.valida_venda() OWNER TO postgres;
+
+--
+-- TOC entry 191 (class 1255 OID 16478)
+-- Dependencies: 5 525
+-- Name: valida_venda_produto(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION valida_venda_produto() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+	rs RECORD;
+	rsvenda RECORD;
+BEGIN
+	SELECT INTO rs codigo, preco, quantidade, gerasenha FROM produto WHERE codigo = NEW.PRODUTO;
+	IF NOT FOUND THEN 
+		RAISE EXCEPTION 'Codigo de produto nao encontrado';
+	END IF;
+
+	IF rs.quantidade - NEW.QUANTIDADE < 0 THEN 
+		RAISE EXCEPTION 'Quantidade indisponivel. No estoque: %', rs.quantidade;
+	END IF;
+
+	IF NEW.QUANTIDADE <= 0 THEN 
+		RAISE EXCEPTION 'Quantidade invalida';
+	END IF;
+
+	SELECT INTO rsvenda codigo, senha FROM venda WHERE codigo = NEW.VENDA;
+
+	IF rs.gerasenha = 1 AND rsvenda.senha = 0 THEN 
+		UPDATE venda SET senha = nextval('seqsenha') WHERE codigo = NEW.VENDA;
+	END IF; 
+
+	RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.valida_venda_produto() OWNER TO postgres;
+
+--
+-- TOC entry 192 (class 1255 OID 16479)
+-- Dependencies: 5 525
+-- Name: valida_venda_produto_after(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION valida_venda_produto_after() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+	rs RECORD;
+BEGIN
+	SELECT INTO rs codigo, preco, quantidade FROM produto WHERE codigo = NEW.PRODUTO;
+		
+	/* Atualizar o valor da venda */
+	UPDATE venda SET total = total + rs.preco*NEW.QUANTIDADE WHERE codigo = NEW.VENDA;
+	/* Atualizar o estoque do produto*/ 
+	UPDATE produto SET quantidade = quantidade - NEW.QUANTIDADE WHERE codigo = rs.codigo;
+	
+	RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.valida_venda_produto_after() OWNER TO postgres;
+
+--
+-- TOC entry 164 (class 1259 OID 16400)
+-- Dependencies: 5
+-- Name: seqcompra; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE seqcompra
+    START WITH 1
+    INCREMENT BY 1
+    MINVALUE 0
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.seqcompra OWNER TO postgres;
+
+--
+-- TOC entry 1934 (class 0 OID 0)
+-- Dependencies: 164
+-- Name: seqcompra; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('seqcompra', 1, false);
+
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- TOC entry 170 (class 1259 OID 16453)
+-- Dependencies: 1898 1899 1900 1901 5
+-- Name: compra; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE compra (
+    codigo integer DEFAULT nextval('seqcompra'::regclass) NOT NULL,
+    data timestamp without time zone DEFAULT ('now'::text)::timestamp(6) with time zone NOT NULL,
+    total numeric DEFAULT 0 NOT NULL,
+    fornecedor integer,
+    CONSTRAINT compra_total_check CHECK ((total >= (0)::numeric))
+);
+
+
+ALTER TABLE public.compra OWNER TO postgres;
+
+--
+-- TOC entry 162 (class 1259 OID 16396)
+-- Dependencies: 5
+-- Name: seqfornecedor; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE seqfornecedor
+    START WITH 1
+    INCREMENT BY 1
+    MINVALUE 0
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.seqfornecedor OWNER TO postgres;
+
+--
+-- TOC entry 1935 (class 0 OID 0)
+-- Dependencies: 162
+-- Name: seqfornecedor; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('seqfornecedor', 1, false);
+
+
+--
+-- TOC entry 167 (class 1259 OID 16416)
+-- Dependencies: 1889 1890 5
+-- Name: fornecedor; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE fornecedor (
+    codigo integer DEFAULT nextval('seqfornecedor'::regclass) NOT NULL,
+    nome character varying(50) NOT NULL,
+    endereco character varying(100) NOT NULL,
+    numero integer NOT NULL,
+    cidade character varying(100) NOT NULL,
+    estado character varying(2) NOT NULL,
+    CONSTRAINT fornecedor_numero_check CHECK ((numero > 0))
+);
+
+
+ALTER TABLE public.fornecedor OWNER TO postgres;
+
+--
+-- TOC entry 161 (class 1259 OID 16394)
+-- Dependencies: 5
+-- Name: seqproduto; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE seqproduto
+    START WITH 1
+    INCREMENT BY 1
+    MINVALUE 0
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.seqproduto OWNER TO postgres;
+
+--
+-- TOC entry 1936 (class 0 OID 0)
+-- Dependencies: 161
+-- Name: seqproduto; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('seqproduto', 43, true);
+
+
+--
+-- TOC entry 166 (class 1259 OID 16404)
+-- Dependencies: 1885 1886 1887 1888 5
+-- Name: produto; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE produto (
+    codigo integer DEFAULT nextval('seqproduto'::regclass) NOT NULL,
+    nome text NOT NULL,
+    preco numeric NOT NULL,
+    quantidade integer NOT NULL,
+    gerasenha integer DEFAULT 0 NOT NULL,
+    CONSTRAINT produto_preco_check CHECK ((preco > (0)::numeric)),
+    CONSTRAINT produto_quantidade_check CHECK ((quantidade >= 0))
+);
+
+
+ALTER TABLE public.produto OWNER TO postgres;
+
+--
+-- TOC entry 165 (class 1259 OID 16402)
+-- Dependencies: 5
+-- Name: seqsenha; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE seqsenha
+    START WITH 10
+    INCREMENT BY 1
+    MINVALUE 0
+    MAXVALUE 999
+    CACHE 1
+    CYCLE;
+
+
+ALTER TABLE public.seqsenha OWNER TO postgres;
+
+--
+-- TOC entry 1937 (class 0 OID 0)
+-- Dependencies: 165
+-- Name: seqsenha; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('seqsenha', 10, false);
+
+
+--
+-- TOC entry 163 (class 1259 OID 16398)
+-- Dependencies: 5
+-- Name: seqvenda; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE seqvenda
+    START WITH 1
+    INCREMENT BY 1
+    MINVALUE 0
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.seqvenda OWNER TO postgres;
+
+--
+-- TOC entry 1938 (class 0 OID 0)
+-- Dependencies: 163
+-- Name: seqvenda; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('seqvenda', 1, false);
+
+
+--
+-- TOC entry 168 (class 1259 OID 16423)
+-- Dependencies: 1891 1892 1893 1894 1895 1896 5
+-- Name: venda; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE venda (
+    codigo integer DEFAULT nextval('seqvenda'::regclass) NOT NULL,
+    total numeric DEFAULT 0 NOT NULL,
+    data timestamp without time zone DEFAULT ('now'::text)::timestamp(6) with time zone NOT NULL,
+    senha integer DEFAULT 0,
+    CONSTRAINT venda_senha_check CHECK ((senha >= 0)),
+    CONSTRAINT venda_total_check CHECK ((total >= (0)::numeric))
+);
+
+
+ALTER TABLE public.venda OWNER TO postgres;
+
+--
+-- TOC entry 169 (class 1259 OID 16437)
+-- Dependencies: 1897 5
+-- Name: vendaproduto; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE vendaproduto (
+    venda integer NOT NULL,
+    produto integer NOT NULL,
+    quantidade integer NOT NULL,
+    CONSTRAINT vendaproduto_quantidade_check CHECK ((quantidade > 0))
+);
+
+
+ALTER TABLE public.vendaproduto OWNER TO postgres;
+
+--
+-- TOC entry 1927 (class 0 OID 16453)
+-- Dependencies: 170
+-- Data for Name: compra; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY compra (codigo, data, total, fornecedor) FROM stdin;
+\.
+
+
+--
+-- TOC entry 1924 (class 0 OID 16416)
+-- Dependencies: 167
+-- Data for Name: fornecedor; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY fornecedor (codigo, nome, endereco, numero, cidade, estado) FROM stdin;
+\.
+
+
+--
+-- TOC entry 1923 (class 0 OID 16404)
+-- Dependencies: 166
+-- Data for Name: produto; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY produto (codigo, nome, preco, quantidade, gerasenha) FROM stdin;
+1	Sub Zero	2.500000	180	0
+2	Skol	3.000000	174	0
+3	Brahma	3.000000	300	0
+4	Heineken	4.000000	290	0
+5	Caipirinha de Limao	8.000000	50	1
+6	Espanhola	8.000000	50	1
+7	Capeta	8.000000	60	1
+8	Caipirinha de Morango	10.000000	60	1
+9	Por do Sol	10.000000	60	1
+10	Amarula	10.000000	60	1
+11	Safadeza	10.000000	60	1
+12	Cuba Libre	10.000000	60	1
+13	Batida de Morango	10.000000	60	1
+14	Fresh Ice	12.000000	60	1
+15	Coca Cola	3.000000	120	0
+16	Guarana Antarctica	3.000000	120	0
+17	Suco de Laranja	3.500000	60	1
+18	Suco de Laranja com Acerola	3.500000	60	1
+19	Suco de Abacaxi	3.500000	60	1
+20	Suco de Abacaxi com Hortela	3.500000	60	1
+21	Suco de Acerola	3.500000	60	1
+22	Suco de Uva	3.500000	60	1
+23	Suco de Pessego	3.500000	60	1
+24	Porcao de Kibe	12.000000	40	1
+25	Porcao de Coxinha de Frango	12.000000	40	1
+26	Porcao de Bolinha de Queijo	12.000000	40	1
+27	Porcao de Bolinha de Palmito	14.000000	40	1
+28	Porcao de Croquete de Bacalhau	16.000000	40	1
+29	Porcao de Croquete de Camarao	16.000000	40	1
+30	Porcao de Bolinho de Mandioca com Carne Seca	18.000000	40	1
+31	Porcao de Batata Frita	10.000000	30	1
+32	Porcao de Polenta Frita	10.000000	30	1
+33	Porcao de Calabresa	15.000000	50	1
+34	Porcao de Presunto 	10.000000	50	1
+35	Porcao de Mussarela	12.000000	50	1
+36	Porcao de Salame	15.000000	50	1
+37	Porcao de Tudo Junto	20.000000	20	1
+38	Misto Beat	4.000000	10	1
+39	Rock Burguer	6.000000	10	1
+40	Heavy Bacon	6.000000	10	1
+41	Cala Groove	6.000000	10	1
+42	Soul Chicken	6.000000	10	1
+43	Reggae Power	8.000000	10	1
+\.
+
+
+--
+-- TOC entry 1925 (class 0 OID 16423)
+-- Dependencies: 168
+-- Data for Name: venda; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY venda (codigo, total, data, senha) FROM stdin;
+\.
+
+
+--
+-- TOC entry 1926 (class 0 OID 16437)
+-- Dependencies: 169
+-- Data for Name: vendaproduto; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY vendaproduto (venda, produto, quantidade) FROM stdin;
+\.
+
+
+--
+-- TOC entry 1911 (class 2606 OID 16464)
+-- Dependencies: 170 170
+-- Name: compra_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY compra
+    ADD CONSTRAINT compra_pkey PRIMARY KEY (codigo);
+
+
+--
+-- TOC entry 1905 (class 2606 OID 16422)
+-- Dependencies: 167 167
+-- Name: fornecedor_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY fornecedor
+    ADD CONSTRAINT fornecedor_pkey PRIMARY KEY (codigo);
+
+
+--
+-- TOC entry 1903 (class 2606 OID 16415)
+-- Dependencies: 166 166
+-- Name: produto_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY produto
+    ADD CONSTRAINT produto_pkey PRIMARY KEY (codigo);
+
+
+--
+-- TOC entry 1907 (class 2606 OID 16436)
+-- Dependencies: 168 168
+-- Name: venda_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY venda
+    ADD CONSTRAINT venda_pkey PRIMARY KEY (codigo);
+
+
+--
+-- TOC entry 1909 (class 2606 OID 16442)
+-- Dependencies: 169 169 169
+-- Name: vendaproduto_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY vendaproduto
+    ADD CONSTRAINT vendaproduto_pkey PRIMARY KEY (venda, produto);
+
+
+--
+-- TOC entry 1919 (class 2620 OID 16486)
+-- Dependencies: 185 169
+-- Name: valida_excluir_item_venda; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER valida_excluir_item_venda BEFORE DELETE ON vendaproduto FOR EACH ROW EXECUTE PROCEDURE valida_excluir_item_venda();
+
+
+--
+-- TOC entry 1922 (class 2620 OID 16480)
+-- Dependencies: 183 170
+-- Name: validacao_comra; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER validacao_comra BEFORE INSERT OR UPDATE ON compra FOR EACH ROW EXECUTE PROCEDURE valida_compra();
+
+
+--
+-- TOC entry 1915 (class 2620 OID 16481)
+-- Dependencies: 167 184
+-- Name: validacao_excluir_fornecedor; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER validacao_excluir_fornecedor BEFORE DELETE ON fornecedor FOR EACH ROW EXECUTE PROCEDURE valida_excluir_fornecedor();
+
+
+--
+-- TOC entry 1917 (class 2620 OID 16484)
+-- Dependencies: 168 187
+-- Name: validacao_excluir_venda; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER validacao_excluir_venda BEFORE DELETE ON venda FOR EACH ROW EXECUTE PROCEDURE valida_excluir_venda();
+
+
+--
+-- TOC entry 1916 (class 2620 OID 16483)
+-- Dependencies: 167 188
+-- Name: validacao_fornecedor; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER validacao_fornecedor BEFORE INSERT OR UPDATE ON fornecedor FOR EACH ROW EXECUTE PROCEDURE valida_fornecedor();
+
+
+--
+-- TOC entry 1918 (class 2620 OID 16485)
+-- Dependencies: 168 190
+-- Name: validacao_venda; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER validacao_venda BEFORE INSERT OR UPDATE ON venda FOR EACH ROW EXECUTE PROCEDURE valida_venda();
+
+
+--
+-- TOC entry 1920 (class 2620 OID 16487)
+-- Dependencies: 169 191
+-- Name: validacao_venda_produto; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER validacao_venda_produto BEFORE INSERT OR UPDATE ON vendaproduto FOR EACH ROW EXECUTE PROCEDURE valida_venda_produto();
+
+
+--
+-- TOC entry 1921 (class 2620 OID 16488)
+-- Dependencies: 169 192
+-- Name: validacao_venda_produto_after; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER validacao_venda_produto_after AFTER INSERT OR UPDATE ON vendaproduto FOR EACH ROW EXECUTE PROCEDURE valida_venda_produto_after();
+
+
+--
+-- TOC entry 1914 (class 2606 OID 16465)
+-- Dependencies: 1904 170 167
+-- Name: compra_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY compra
+    ADD CONSTRAINT compra_fkey FOREIGN KEY (fornecedor) REFERENCES fornecedor(codigo);
+
+
+--
+-- TOC entry 1912 (class 2606 OID 16443)
+-- Dependencies: 169 166 1902
+-- Name: vendaproduto_produto_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY vendaproduto
+    ADD CONSTRAINT vendaproduto_produto_fkey FOREIGN KEY (produto) REFERENCES produto(codigo) ON DELETE RESTRICT;
+
+
+--
+-- TOC entry 1913 (class 2606 OID 16448)
+-- Dependencies: 169 1906 168
+-- Name: vendaproduto_venda_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY vendaproduto
+    ADD CONSTRAINT vendaproduto_venda_fkey FOREIGN KEY (venda) REFERENCES venda(codigo) ON DELETE RESTRICT;
+
+
+--
+-- TOC entry 1932 (class 0 OID 0)
+-- Dependencies: 5
+-- Name: public; Type: ACL; Schema: -; Owner: postgres
+--
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM postgres;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+-- Completed on 2012-03-10 18:19:50
+
+--
+-- PostgreSQL database dump complete
+--
+

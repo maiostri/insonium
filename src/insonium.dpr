@@ -11,14 +11,16 @@ uses
   uDMPrincipal in 'uDMPrincipal.pas' {dmPrincipal: TDataModule},
   uProduto in 'uProduto.pas',
   uPersistente in 'uPersistente.pas',
-  uProdutoDAO in 'uProdutoDAO.pas';
+  uProdutoDAO in 'uProdutoDAO.pas',
+  uRelProdutoCodigo in 'uRelProdutoCodigo.pas' {fRelProdutoCodigo},
+  ufrmRelVenda in 'ufrmRelVenda.pas' {frmRelVenda},
+  uRelVendas in 'uRelVendas.pas' {RelVendas};
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.CreateForm(TfMain, fMain);
-  Application.CreateForm(TdmPrincipal, dmPrincipal);
   Application.Run;
   fMain.Show;
 end.

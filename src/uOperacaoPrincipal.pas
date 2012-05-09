@@ -225,7 +225,7 @@ begin
     begin
       if eValorPago.Text <> '' then
         begin
-            valorpago := StrToFloat(eValorPago.Text);
+            valorpago := StrTofloat(eValorPago.Text);
             if (valorpago < adoQuery.FieldByName('total').AsFloat) then
             begin
                 ShowMessage('Valor inferior ao total da conta');
@@ -245,7 +245,7 @@ end;
 procedure TfOperacaoPrincipal.eValorPagoKeyPress(Sender: TObject;
   var Key: Char);
 begin
-    if not (Key in['0'..'9',Chr(8), chr(46)]) then Key:= #0;
+    if not (Key in['0'..'9',Chr(8), chr(44), DecimalSeparator]) then Key:= #0;
 
 end;
 
@@ -260,6 +260,7 @@ procedure TfOperacaoPrincipal.eQuantidadeKeyDown(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
     if key = VK_RETURN then bOK.OnClick(fOperacaoPrincipal);
+
 end;
 
 end.

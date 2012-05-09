@@ -415,6 +415,7 @@ object fOperacaoPrincipal: TfOperacaoPrincipal
     Top = 152
     Width = 649
     Height = 329
+    TabStop = False
     DataSource = dsQueryItem
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText

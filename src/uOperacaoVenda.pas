@@ -19,7 +19,6 @@ type
     adoQuerytotal: TBCDField;
     adoQuerydata: TDateTimeField;
     adoQuerysenha: TIntegerField;
-    ClientDataSet1: TClientDataSet;
     Label9: TLabel;
     procedure bOKClick(Sender: TObject);
     procedure bInserirClick(Sender: TObject);
@@ -46,6 +45,7 @@ implementation
 procedure TfOperacaoVenda.bOKClick(Sender: TObject);
 var
     i : integer;
+    SavePlace : TBookmark;
 begin
   inherited;
   adoQueryProduto.Close;
@@ -55,14 +55,21 @@ begin
   adoQueryProduto.Parameters.ParamByName('pqtde').Value := eQuantidade.Text;
   adoQueryProduto.ExecSQL;
 
-    if adoQuery.RecordCount > 0 then
+  SavePlace := adoQuery.GetBookmark;
+  adoQuery.UpdateBatch();
+  adoQuery.Refresh;
+//  adoQuery.Close;
+//  adoQuery.Open;
+//  adoQuery.Last;
+//  adoQuery.GotoBookmark(SavePlace);
+//  adoQuery.FreeBookmark(SavePlace);
+
+  if adoQuery.RecordCount > 0 then
   begin
     adoQueryItem.Close;
     adoQueryItem.Parameters.ParamByName('codvenda').Value := adoQuery.Fields[0].AsInteger;
     adoQueryItem.Open;
-//    dItem.Update;
   end;
-    adoQuery.Refresh;
     bOK.Enabled := false;
 
     for i := 0 to TMyDBGrid(dItem).RowCount - 1 do

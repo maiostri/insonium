@@ -319,6 +319,7 @@ object fOperacaoPrincipal: TfOperacaoPrincipal
     ParentFont = False
     TabOrder = 12
     OnKeyDown = eQuantidadeKeyDown
+    OnKeyPress = eQuantidadeKeyPress
   end
   object bPrimeiro: TButton
     Left = 16
@@ -415,6 +416,7 @@ object fOperacaoPrincipal: TfOperacaoPrincipal
     Top = 152
     Width = 649
     Height = 329
+    TabStop = False
     DataSource = dsQueryItem
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText

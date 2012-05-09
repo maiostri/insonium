@@ -58,37 +58,25 @@ end;
 procedure TfCadastroPrincipal.bPrimeiroClick(Sender: TObject);
 begin
   if (adoQuery <> nil) then
-  begin
     adoQuery.First;
-    bAnterior.Enabled := False;
-  end;
 end;
 
 procedure TfCadastroPrincipal.bAnteriorClick(Sender: TObject);
 begin
   if (adoQuery <> nil) then
-  begin
     adoQuery.Prior;
-    bProximo.Enabled := true;
-  end;
 end;
 
 procedure TfCadastroPrincipal.bProximoClick(Sender: TObject);
 begin
   if (adoQuery <> nil) then
-  begin
     adoQuery.next;
-    bAnterior.Enabled := true;
-  end;
 end;
 
 procedure TfCadastroPrincipal.bUltimoClick(Sender: TObject);
 begin
   if (adoQuery <> nil) then
-  begin
     adoQuery.Last;
-    bProximo.Enabled := false;
-  end;
 end;
 
 procedure TfCadastroPrincipal.FormKeyDown(Sender: TObject; var Key: Word;
@@ -157,22 +145,19 @@ end;
 
 procedure TfCadastroPrincipal.dsQueryStateChange(Sender: TObject);
 begin
-   if TDataSource(Sender).DataSet.State in [dsEdit,dsInsert] then //Se tiver em mode de edição ou iserção
-  begin
-    bInserir.Enabled := false;
-    bEditar.Enabled := false;
-    bSalvar.Enabled := True;
-    bRemover.Enabled := False;
-    bCancelar.Enabled := True;
-  end else
-  if TDataSource(Sender).DataSet.State = dsbrowse then //em modo de consulta
-  begin
-    bInserir.Enabled := true;
-    bEditar.Enabled := true;
-    bSalvar.Enabled := false;
-    bRemover.Enabled := true;
-    bCancelar.Enabled := false;
-  end;
+  bInserir.Enabled := TDataSource(Sender).DataSet.State = dsbrowse;
+  bEditar.Enabled := TDataSource(Sender).DataSet.State = dsbrowse;
+  bRemover.Enabled := TDataSource(Sender).DataSet.State = dsbrowse;
+  bRemover.Enabled := TDataSource(Sender).DataSet.State = dsbrowse;
+
+  bPrimeiro.Enabled := TDataSource(Sender).DataSet.State = dsbrowse;
+  bAnterior.Enabled := TDataSource(Sender).DataSet.State = dsbrowse;
+  bProximo.Enabled := TDataSource(Sender).DataSet.State = dsbrowse;
+  bUltimo.Enabled := TDataSource(Sender).DataSet.State = dsbrowse;
+
+
+  bSalvar.Enabled  := TDataSource(Sender).DataSet.State in [dsEdit,dsInsert];
+  bCancelar.Enabled := TDataSource(Sender).DataSet.State in [dsEdit,dsInsert];
 end;
 
 procedure TfCadastroPrincipal.FormShow(Sender: TObject);

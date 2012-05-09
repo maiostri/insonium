@@ -166,6 +166,7 @@ object fCadastroPrincipal: TfCadastroPrincipal
     Width = 145
     Height = 25
     Caption = 'F7 - Cancelar'
+    Enabled = False
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
     Font.Height = -19
@@ -173,6 +174,7 @@ object fCadastroPrincipal: TfCadastroPrincipal
     Font.Style = [fsBold]
     ParentFont = False
     TabOrder = 9
+    OnClick = bCancelarClick
   end
   object adoQuery: TADOQuery
     Connection = fMain.ADOConn

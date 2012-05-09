@@ -14,6 +14,10 @@ inherited fOperacaoVenda: TfOperacaoVenda
   inherited Label3: TLabel
     Top = 139
   end
+  inherited Label4: TLabel
+    Width = 152
+    Caption = 'END - Valor Pago'
+  end
   inherited Label7: TLabel
     Left = 112
     Top = 67
@@ -44,7 +48,9 @@ inherited fOperacaoVenda: TfOperacaoVenda
   inherited eTotal: TDBEdit
     Height = 69
     DataField = 'total'
+    Enabled = True
     Font.Height = -48
+    ReadOnly = True
   end
   inherited eValorPago: TEdit
     Height = 69
@@ -250,13 +256,7 @@ inherited fOperacaoVenda: TfOperacaoVenda
     Top = 512
   end
   inherited adoQueryProduto: TADOQuery
-    Left = 624
-    Top = 512
-  end
-  object ClientDataSet1: TClientDataSet
-    Aggregates = <>
-    Params = <>
-    Left = 568
+    Left = 560
     Top = 512
   end
 end
